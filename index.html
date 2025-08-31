@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abulafia - A Device for Textual Transmutation</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        /* 90s Classic Mac OS GUI Aesthetic */
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #b5b5b5;
+            background-image:
+                linear-gradient(45deg, #c4c4c4 25%, transparent 25%),
+                linear-gradient(-45deg, #c4c4c4 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #c4c4c4 75%),
+                linear-gradient(-45deg, transparent 75%, #c4c4c4 75%);
+            background-size: 2px 2px;
+            color: #000;
+        }
+        
+        .window-container {
+            background-color: #d4d0c8;
+            border: 2px solid #000;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        .window-title-bar {
+            background: repeating-linear-gradient(180deg, #fff, #fff 1px, #ccc 1px, #ccc 2px);
+            color: #000;
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000;
+            user-select: none;
+        }
+        .window-title-bar .close-box {
+            width: 14px;
+            height: 14px;
+            border: 2px solid black;
+            cursor: pointer;
+        }
+        .window-title-bar .close-box:active {
+             background-color: #000;
+        }
+
+
+        .btn-retro {
+            @apply w-full border-2 border-black text-black px-4 py-2 uppercase transition-all duration-100;
+            background-color: #d4d0c8;
+            border-radius: 0; /* Sharp corners */
+            box-shadow: 2px 2px 0px #000;
+        }
+        .btn-retro:hover:not(:disabled) {
+            background-color: #e0e0e0;
+        }
+        .btn-retro:active:not(:disabled) {
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+        .btn-retro:disabled {
+            @apply text-gray-500 cursor-not-allowed opacity-70 shadow-none;
+        }
+        
+        .main-btn-retro {
+             @apply w-full border-2 border-black text-black px-4 py-3 uppercase font-bold;
+            background-color: #d4d0c8;
+            border-radius: 0; /* Sharp corners */
+            box-shadow: 2px 2px 0px #000;
+        }
+        .main-btn-retro:hover:not(:disabled) {
+            background-color: #e0e0e0;
+        }
+        .main-btn-retro:active:not(:disabled) {
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+        .main-btn-retro:disabled {
+             @apply text-gray-500 cursor-not-allowed opacity-70 shadow-none;
+        }
+
+        .inset-panel {
+            background-color: #fff;
+            border: 2px solid;
+            border-color: #777 #fff #fff #777;
+            color: #000;
+        }
+        
+        .outset-panel {
+            border: 2px solid;
+            border-color: #fff #777 #777 #fff;
+            padding: 1rem;
+        }
+
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #777;
+            outline: none;
+            border: 2px solid;
+            border-color: #333 #bbb #bbb #333;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 16px; height: 24px;
+            background: #d4d0c8; cursor: pointer;
+            border: 2px solid black;
+        }
+        .range-slider::-moz-range-thumb {
+            width: 16px; height: 24px;
+            background: #d4d0c8; cursor: pointer;
+            border: 2px solid black;
+        }
+
+        /* Blinking Cursor */
+        @keyframes blink { 50% { opacity: 0; } }
+        .blinking-cursor {
+            display: inline-block; width: 0.7rem; height: 1.5rem;
+            background-color: #000; margin-left: 2px;
+            animation: blink 1.2s step-end infinite;
+        }
+
+        /* Tooltip styles */
+        .tooltip { @apply relative; }
+        .tooltip .tooltip-text {
+            @apply invisible absolute z-10 w-48 p-2 -mt-20 ml-4 text-sm normal-case;
+            @apply bg-white text-black;
+            @apply border border-black shadow-lg;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltip-text { @apply visible; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-xl tracking-wide">
+
+    <div class="w-full max-w-5xl rounded-none overflow-hidden window-container">
+        <div class="window-title-bar">
+            <div class="flex items-center gap-2">
+                <div class="close-box"></div>
+                <span>Abulafia</span>
+            </div>
+            <span>A Device for Textual Transmutation</span>
+        </div>
+        
+        <div class="p-4">
+            <div class="grid md:grid-cols-2 gap-4">
+                <!-- Left Column: Controls -->
+                <div class="flex flex-col space-y-4">
+                    <!-- File Upload -->
+                    <div class="outset-panel">
+                        <p class="mb-2">LOAD MANUSCRIPTS</p>
+                        <label for="fileInput" id="dropZone" class="flex flex-col items-center justify-center w-full h-32 p-4 text-center border-2 border-dashed border-gray-500 cursor-pointer hover:border-black hover:bg-gray-300 transition-colors duration-300">
+                            <p>[ SELECT FILES OR DRAG HERE ]</p>
+                        </label>
+                        <input type="file" id="fileInput" multiple accept=".txt" class="hidden" />
+                        <div id="fileList" class="mt-3 space-y-1 inset-panel p-2 h-24 overflow-y-auto text-base"></div>
+                    </div>
+
+                    <!-- Generation Controls -->
+                    <div class="outset-panel">
+                         <p class="mb-2">TUNE ENGINE</p>
+                        <div class="space-y-4 p-2">
+                            <div class="tooltip">
+                                <label for="lengthSlider" class="flex justify-between items-center">
+                                    <span>PASSAGE LENGTH</span>
+                                    <span id="lengthValue">200 WRDS</span>
+                                </label>
+                                <input type="range" id="lengthSlider" min="50" max="500" value="200" class="w-full appearance-none cursor-pointer range-slider mt-1">
+                                <div class="tooltip-text">Controls the approximate word count of the generated text.</div>
+                            </div>
+                            <div class="tooltip">
+                                <label for="creativitySlider" class="flex justify-between items-center">
+                                    <span>ESOTERIC INFLUENCE</span>
+                                    <span id="creativityValue">BALANCED</span>
+                                </label>
+                                <input type="range" id="creativitySlider" min="1" max="3" value="2" class="w-full appearance-none cursor-pointer range-slider mt-1">
+                                <div class="tooltip-text">Adjusts the engine's "memory". Higher values create more complex but potentially chaotic results.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-2">
+                        <button id="generateBtn" class="main-btn-retro text-2xl mb-3">TRANSMUTE</button>
+                        <div class="grid grid-cols-2 gap-4">
+                             <div class="tooltip"><button id="sampleBtn" class="btn-retro">SAMPLE</button><div class="tooltip-text">Loads a pre-defined set of esoteric texts.</div></div>
+                             <div class="tooltip"><button id="previewBtn" class="btn-retro">PREVIEW</button><div class="tooltip-text">View the currently loaded texts.</div></div>
+                             <div class="tooltip"><button id="clearBtn" class="btn-retro">CLEAR</button><div class="tooltip-text">Removes all loaded texts.</div></div>
+                             <div class="tooltip"><button id="aboutBtn" class="btn-retro">ABOUT</button><div class="tooltip-text">Displays information about this program.</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Output -->
+                <div class="flex flex-col min-h-[300px] md:min-h-full">
+                    <div class="outset-panel h-full flex flex-col">
+                        <p class="mb-2">OUTPUT</p>
+                        <div class="flex-grow leading-relaxed overflow-y-auto relative inset-panel p-3 text-lg">
+                            <div id="outputContainer" class="min-h-full">
+                                <div id="output">READY.</div>
+                                <div id="cursor" class="blinking-cursor"></div>
+                            </div>
+                            <div id="loader" class="absolute inset-0 hidden items-center justify-center bg-white">
+                                <p class="animate-pulse">PROCESSING...</p>
+                            </div>
+                        </div>
+                         <button id="copyBtn" class="btn-retro mt-3 disabled:opacity-50">COPY</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Base -->
+    <div id="modalBackdrop" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 hidden z-50">
+        <div id="modalContainer" class="w-full max-w-2xl max-h-[90vh] flex flex-col window-container">
+             <!-- Modal content will be injected here -->
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const fileInput = document.getElementById('fileInput');
+            const dropZone = document.getElementById('dropZone');
+            const fileList = document.getElementById('fileList');
+            const lengthSlider = document.getElementById('lengthSlider');
+            const lengthValue = document.getElementById('lengthValue');
+            const creativitySlider = document.getElementById('creativitySlider');
+            const creativityValue = document.getElementById('creativityValue');
+            const generateBtn = document.getElementById('generateBtn');
+            const sampleBtn = document.getElementById('sampleBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const outputEl = document.getElementById('output');
+            const loader = document.getElementById('loader');
+            const cursor = document.getElementById('cursor');
+            const previewBtn = document.getElementById('previewBtn');
+            const aboutBtn = document.getElementById('aboutBtn');
+            
+            const modalBackdrop = document.getElementById('modalBackdrop');
+            const modalContainer = document.getElementById('modalContainer');
+
+            // --- State ---
+            let loadedSources = []; // Array of { name: string, content: string }
+            let markovChain = {};
+            const creativityMap = { 1: "COHERENT", 2: "BALANCED", 3: "CHAOTIC" };
+            let typeInterval;
+
+            // --- Fallback Data ---
+            const fallbackTexts = [
+                "The Knights Templar discovered ancient secrets beneath Solomon's Temple. These sacred geometries hold the key to understanding the cosmic order. The Rosicrucians inherited this knowledge through secret manuscripts. Hidden symbols in cathedral architecture reveal the truth about electromagnetic frequencies.",
+                "The Illuminati infiltrated Masonic lodges during the eighteenth century. Secret societies communicate through encoded messages in classical literature. Ancient bloodlines maintain control through banking systems. The Hermetic tradition preserves alchemical formulas for transmuting base metals into gold.",
+                "Kabbalistic texts contain numerical codes that predict future events. The Holy Grail is actually a metaphor for hidden knowledge passed down through mystery schools. Sacred sites are connected by ley lines that channel earth energies. Medieval guilds protected technological secrets that surpass modern understanding.",
+                "The Library of Alexandria contained maps to other dimensions. Gnostic gospels reveal the true nature of reality as a simulation. Ancient astronauts left genetic markers in human DNA. The Vatican archives hide evidence of extraterrestrial contact throughout history.",
+                "Alchemical symbols encode advanced scientific principles. The Philosopher's Stone represents unified field theory. Sacred mathematics governs the movements of celestial bodies. Secret brotherhoods use ritual magic to influence global markets and political outcomes."
+            ];
+
+            // --- Core Logic ---
+            const buildMarkovChain = () => {
+                markovChain = {};
+                if (loadedSources.length === 0) return;
+                const order = parseInt(creativitySlider.value);
+                const allText = loadedSources.map(s => s.content).join(' ');
+                const words = allText.replace(/[^\w\s'-]/g, ' ').toLowerCase().split(/\s+/).filter(Boolean);
+                if (words.length <= order) return;
+                for (let i = 0; i < words.length - order; i++) {
+                    const key = words.slice(i, i + order).join(' ');
+                    const next = words[i + order];
+                    if (!markovChain[key]) markovChain[key] = [];
+                    markovChain[key].push(next);
+                }
+            };
+            
+            const generateText = () => {
+                if (Object.keys(markovChain).length === 0) return "ERROR: NO SOURCE MATERIAL LOADED.";
+                const targetLength = parseInt(lengthSlider.value);
+                const order = parseInt(creativitySlider.value);
+                const allKeys = Object.keys(markovChain);
+                let startKey = allKeys[Math.floor(Math.random() * allKeys.length)];
+                const words = startKey.split(' ');
+                for (let i = 0; i < targetLength - order; i++) {
+                    const currentKey = words.slice(-order).join(' ');
+                    const nextWords = markovChain[currentKey];
+                    if (!nextWords || nextWords.length === 0) {
+                        startKey = allKeys[Math.floor(Math.random() * allKeys.length)];
+                        words.push(...startKey.split(' '));
+                    } else {
+                        const nextWord = nextWords[Math.floor(Math.random() * nextWords.length)];
+                        words.push(nextWord);
+                    }
+                }
+                let result = words.slice(0, targetLength).join(' ');
+                result = result.charAt(0).toUpperCase() + result.slice(1);
+                result = result.replace(/([.!?]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
+                return result.endsWith('.') ? result : result + '...';
+            };
+            
+            // --- UI & Event Handlers ---
+            const typeWriter = (text) => {
+                clearInterval(typeInterval);
+                let i = 0;
+                outputEl.textContent = '';
+                cursor.classList.add('hidden');
+                typeInterval = setInterval(() => {
+                    if (i < text.length) {
+                        outputEl.textContent += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typeInterval);
+                        cursor.classList.remove('hidden');
+                        generateBtn.disabled = false;
+                        copyBtn.disabled = false;
+                    }
+                }, 10); // Slightly faster typing
+            };
+
+            const updateFileListUI = (sources) => {
+                fileList.innerHTML = '';
+                sources.forEach(source => {
+                    const fileDiv = document.createElement('div');
+                    fileDiv.textContent = `> ${source.name}`;
+                    fileList.appendChild(fileDiv);
+                });
+                updateButtonStates();
+            };
+
+            const processFiles = async (files) => {
+                const readPromises = Array.from(files).map(async file => ({
+                    name: file.name, content: await file.text()
+                }));
+                try {
+                    loadedSources = await Promise.all(readPromises);
+                    updateFileListUI(loadedSources);
+                    buildMarkovChain();
+                } catch (error) {
+                    fileList.innerHTML = `<div class="text-red-500">> ERROR READING FILE.</div>`;
+                    console.error("File reading error:", error);
+                }
+            };
+
+            const handleFileSelect = (event) => {
+                const files = event.target.files;
+                if (files.length > 0) processFiles(files);
+            };
+            
+            const handleGenerate = () => {
+                outputEl.classList.add('hidden');
+                cursor.classList.add('hidden');
+                loader.classList.remove('hidden');
+                loader.classList.add('flex');
+                generateBtn.disabled = true;
+                copyBtn.disabled = true;
+
+                setTimeout(() => {
+                    buildMarkovChain();
+                    const generated = generateText();
+                    loader.classList.add('hidden');
+                    loader.classList.remove('flex');
+                    outputEl.classList.remove('hidden');
+                    typeWriter(generated);
+                }, 500); 
+            };
+
+            const handleSample = () => {
+                loadedSources = fallbackTexts.map((text, index) => ({ name: `Sample-0${index + 1}.txt`, content: text }));
+                fileInput.value = '';
+                fileList.innerHTML = `<p>> Sample Archive Loaded.</p>`;
+                outputEl.textContent = 'READY.';
+                buildMarkovChain();
+                updateButtonStates();
+            };
+
+            const handleClear = () => {
+                loadedSources = [];
+                markovChain = {};
+                fileInput.value = '';
+                fileList.innerHTML = '';
+                outputEl.textContent = 'AWAITING INPUT.';
+                updateButtonStates();
+            };
+
+            const handleCopy = () => {
+                const textToCopy = outputEl.innerText;
+                if (!textToCopy || copyBtn.disabled) return;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // visual feedback for copy can be added here if desired
+                }).catch(err => console.error('Clipboard copy failed', err));
+            };
+            
+            const updateButtonStates = () => {
+                const hasSources = loadedSources.length > 0;
+                generateBtn.disabled = !hasSources;
+                previewBtn.disabled = !hasSources;
+            };
+
+            const closeModal = () => {
+                modalBackdrop.classList.add('hidden');
+                modalContainer.innerHTML = ''; // Clear content
+            }
+            
+            const openModal = (title, content) => {
+                modalContainer.innerHTML = `
+                    <div class="window-title-bar">
+                        <div class="flex items-center gap-2">
+                            <div class="close-box modal-close-btn"></div>
+                            <span>${title}</span>
+                        </div>
+                    </div>
+                    <div class="p-4 overflow-y-auto inset-panel text-base">
+                        ${content}
+                    </div>
+                `;
+                modalBackdrop.classList.remove('hidden');
+                modalContainer.querySelector('.modal-close-btn').addEventListener('click', closeModal);
+            }
+            
+            const showPreview = () => {
+                let content;
+                if (loadedSources.length === 0) {
+                    content = '<p>NO MANUSCRIPTS LOADED.</p>';
+                } else {
+                    content = loadedSources.map(source => `
+                        <div class="mb-4">
+                           <h4 class="font-bold mb-1">${source.name}</h4>
+                           <p class="text-sm border-l-2 border-gray-400 pl-2">${source.content}</p>
+                        </div>
+                    `).join('');
+                }
+                openModal('Preview Manuscripts', `<div class="space-y-4">${content}</div>`);
+            };
+
+            const showAbout = () => {
+                const content = `
+                    <div class="space-y-3 text-base">
+                        <div>
+                            <p class="font-bold text-lg uppercase">About Abulafia</p>
+                            <p>ABULAFIA is a tool for creative exploration and textual alchemy, inspired by Umberto Eco's novel "Foucault's Pendulum."</p>
+                            <p>At its core, the program uses a Markov chain algorithm. It analyzes your uploaded text files to learn the statistical relationships between words. When you click "TRANSMUTE," it generates new text by making probabilistic jumps from one word to the next, creating a unique remix of the source material.</p>
+                            <p>This process allows for the serendipitous discovery of new connections, ideas, and stylistic fusions. It is a device for making meaning in the chaos of information.</p>
+                        </div>
+                        
+                        <div class="border-t-2 border-black my-2 pt-2"></div>
+
+                        <div>
+                            <p class="font-bold text-lg uppercase">Credits</p>
+                            <p>This program was created by Phileas Dazeley-Gaist as a passion project. It's designed to bring a piece of literary software to life and to provide a tool for writers, artists, and the curious to explore the strange beauty of recombinant text.</p>
+                            <p>If you find this program useful or inspiring, please consider checking out more of their work or supporting its continued development below.</p>
+                            <div class="flex gap-4 mt-2">
+                                <a href="https://phileasdg.github.io/" target="_blank" class="underline hover:text-blue-700">Personal Blog</a>
+                                <a href="https://www.paypal.com/donate/?business=K74DYULZRHZ2J&no_recurring=0&item_name=Buy+me+a+coffee+%3AD&currency_code=USD" target="_blank" class="underline hover:text-blue-700">Buy me a coffee</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                openModal('About Abulafia', content);
+            };
+
+            // --- Drag and Drop Logic ---
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => dropZone.classList.add('bg-gray-300'));
+            ['dragleave', 'drop'].forEach(eventName => dropZone.classList.remove('bg-gray-300'));
+            dropZone.addEventListener('drop', (e) => {
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    processFiles(e.dataTransfer.files);
+                }
+            }, false);
+
+            // --- Initial Setup ---
+            fileInput.addEventListener('change', handleFileSelect);
+            lengthSlider.addEventListener('input', () => lengthValue.textContent = `${lengthSlider.value} WRDS`);
+            creativitySlider.addEventListener('input', () => creativityValue.textContent = creativityMap[creativitySlider.value]);
+            generateBtn.addEventListener('click', handleGenerate);
+            sampleBtn.addEventListener('click', handleSample);
+            clearBtn.addEventListener('click', handleClear);
+            copyBtn.addEventListener('click', handleCopy);
+            previewBtn.addEventListener('click', showPreview);
+            aboutBtn.addEventListener('click', showAbout);
+            
+            modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
+
+            handleSample(); 
+        });
+    </script>
+</body>
+</html>
