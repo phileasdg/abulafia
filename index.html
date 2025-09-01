@@ -69,7 +69,7 @@
         }
         
         .main-btn-retro {
-             @apply w-full border-2 border-black text-black px-4 py-3 uppercase font-bold;
+             @apply border-2 border-black text-black px-4 py-3 uppercase font-bold;
             background-color: #d4d0c8;
             border-radius: 0; /* Sharp corners */
             box-shadow: 2px 2px 0px #000;
@@ -184,14 +184,13 @@
                                     <span id="creativityValue">BALANCED</span>
                                 </label>
                                 <input type="range" id="creativitySlider" min="1" max="3" value="2" class="w-full appearance-none cursor-pointer range-slider mt-1">
-                                <div class="tooltip-text">Adjusts the engine's "memory". Higher values create more complex but potentially chaotic results.</div>
+                                <div class="tooltip-text">Adjusts the engine's "memory". CHAOTIC uses less context for more random jumps. COHERENT uses more context, sticking closer to the source text.</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="pt-2">
-                        <button id="generateBtn" class="main-btn-retro text-2xl mb-3">TRANSMUTE</button>
                         <div class="grid grid-cols-2 gap-4">
                              <div class="tooltip"><button id="sampleBtn" class="btn-retro">SAMPLE</button><div class="tooltip-text">Loads a pre-defined set of esoteric texts.</div></div>
                              <div class="tooltip"><button id="previewBtn" class="btn-retro">PREVIEW</button><div class="tooltip-text">View the currently loaded texts.</div></div>
@@ -217,6 +216,10 @@
                          <button id="copyBtn" class="btn-retro mt-3 disabled:opacity-50">COPY</button>
                     </div>
                 </div>
+            </div>
+            <!-- TRANSMUTE Button container -->
+            <div class="pt-4 text-center">
+                <button id="generateBtn" class="main-btn-retro text-2xl inline-block w-4/5 md:w-1/2">TRANSMUTE</button>
             </div>
         </div>
     </div>
@@ -255,16 +258,16 @@
             // --- State ---
             let loadedSources = []; // Array of { name: string, content: string }
             let markovChain = {};
-            const creativityMap = { 1: "COHERENT", 2: "BALANCED", 3: "CHAOTIC" };
+            const creativityMap = { 1: "CHAOTIC", 2: "BALANCED", 3: "COHERENT" };
             let typeInterval;
 
             // --- Fallback Data ---
             const fallbackTexts = [
-                "The true science of alchemy is not about lead into gold, but the transmutation of consciousness itself. The Emerald Tablet provides a formula, a coded message describing seven stages of psychic purification. Secret brotherhoods mistook this for a chemical process, but the Rosicrucians understood the truth. The Philosopher's Stone is a state of being, a perfected awareness that perceives the hidden unity of all things.",
-                "Pythagorean mystery schools taught that reality is formed by harmonic resonance. Specific musical intervals and geometric ratios don't just describe the cosmos, they actively shape it. The architects of Gothic cathedrals encoded these principles into their designs. The vaults and windows are not merely structural; they are vast engines designed to resonate at a specific frequency, one that attunes the mind to a higher plane of thought.",
-                "The Library of Alexandria was not entirely destroyed; its most dangerous texts were moved to a hidden location. These manuscripts describe what the Gnostics called the Archons: non-human entities from another dimension who influence our reality. These texts contain warnings and methods for resisting their psychic control. The Vatican's deepest archives are dedicated not to hiding this truth, but to actively using the Gnostic methods for their own ends.",
-                "Ley lines are not mystical energy paths, but remnants of a global power grid. Ancient civilizations, guided by off-world visitors, built megalithic sites like Stonehenge and Carnac as capacitors and transmitters. The specific alignments of the stones during solstices and equinoxes were designed to channel atmospheric energy. This technology was suppressed after a catastrophic failure, but the network remains, waiting to be reactivated.",
-                "The Bavarian Illuminati's true project was not world domination, but the creation of a perfect language. They believed that our current languages trap us in limited modes of thought. They compiled a secret dictionary of 'true names' for concepts, objects, and emotions. To speak a word from this language is to command the essence of the thing it represents. This lexicon is the ultimate tool of influence, hidden away until humanity is ready for it."
+                "The secret goal of alchemy is not the transmutation of base metals, but the refinement of consciousness itself. The Emerald Tablet is a coded map, a key to this hidden process. Its true language describes a pattern of psychic energy, a path to higher knowledge. The Philosopher's Stone is not a physical object, but a state of being, a frequency of awareness that understands the secret order of reality.",
+                "Ancient mystery schools taught that reality is a pattern of harmonic energy. This secret knowledge is a language of vibration and geometry. The architects of great cathedrals used this code to build structures that resonate at a specific frequency, designed to influence human consciousness. These stone symbols are a key, a map to a hidden order that attunes the mind to a higher plane of thought and spiritual power.",
+                "The Gnostics possessed a hidden knowledge, a truth about the nature of our reality. They taught that the material world is a coded simulation, a construct maintained by a lower power. Their secret texts are a key to understanding this influence and reclaiming our own inner energy. This ancient language of symbols provides a map to awaken consciousness from the dream and perceive the true order of the cosmos.",
+                "Ley lines are not simply paths, but a global network of subtle energy, a hidden power grid. Ancient civilizations understood this secret and built megalithic sites as a key to channel this energy. The specific alignment of the stones is a language, a code that follows a celestial pattern. This knowledge was a map to harness a specific frequency for the transmutation of matter and consciousness.",
+                "The ultimate secret is the creation of a perfect language, a key to influence reality itself. Ancient orders believed that our common speech is a code that limits consciousness. They sought a hidden grammar, a 'true name' for every concept, a vibration with inherent power. This knowledge would be a map to a new mode of thought, a tool for the transmutation of the world through the sheer energy of words."
             ];
 
             // --- Core Logic ---
@@ -284,27 +287,60 @@
             };
             
             const generateText = () => {
-                if (Object.keys(markovChain).length === 0) return "ERROR: NO SOURCE MATERIAL LOADED.";
+                if (Object.keys(markovChain).length === 0) {
+                    return "ERROR: NO SOURCE MATERIAL LOADED. PLEASE USE THE 'SAMPLE' BUTTON OR UPLOAD A .TXT FILE.";
+                }
                 const targetLength = parseInt(lengthSlider.value);
                 const order = parseInt(creativitySlider.value);
                 const allKeys = Object.keys(markovChain);
+
+                // Start with a random key from the chain
                 let startKey = allKeys[Math.floor(Math.random() * allKeys.length)];
                 const words = startKey.split(' ');
+
                 for (let i = 0; i < targetLength - order; i++) {
                     const currentKey = words.slice(-order).join(' ');
                     const nextWords = markovChain[currentKey];
+
                     if (!nextWords || nextWords.length === 0) {
-                        startKey = allKeys[Math.floor(Math.random() * allKeys.length)];
-                        words.push(...startKey.split(' '));
+                        // --- THIS IS THE FIX ---
+                        // The chain hit a dead end. Instead of injecting a whole new phrase,
+                        // we find another random key and use its follower to continue.
+                        // This creates a more "remixed" feel and avoids reproducing source sentences.
+                        let randomKey = allKeys[Math.floor(Math.random() * allKeys.length)];
+                        let newNextWords = markovChain[randomKey];
+
+                        // Ensure the randomly chosen key has followers
+                        let attempts = 0;
+                        while ((!newNextWords || newNextWords.length === 0) && attempts < allKeys.length) {
+                             randomKey = allKeys[Math.floor(Math.random() * allKeys.length)];
+                             newNextWords = markovChain[randomKey];
+                             attempts++;
+                        }
+                        
+                        // If a valid key was found, push its next word. Otherwise, break the loop.
+                        if (newNextWords && newNextWords.length > 0) {
+                            const nextWord = newNextWords[Math.floor(Math.random() * newNextWords.length)];
+                            words.push(nextWord);
+                        } else {
+                            break; // Could not find a valid continuation point
+                        }
+
                     } else {
+                        // The chain is valid, so we pick a random next word
                         const nextWord = nextWords[Math.floor(Math.random() * nextWords.length)];
                         words.push(nextWord);
                     }
                 }
+
+                // Post-processing the generated text
                 let result = words.slice(0, targetLength).join(' ');
+                if (!result) return "GENERATION FAILED. TRY DIFFERENT SETTINGS OR MORE SOURCE TEXT.";
                 result = result.charAt(0).toUpperCase() + result.slice(1);
+                // Capitalize letters after sentence-ending punctuation
                 result = result.replace(/([.!?]\s+)([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
-                return result.endsWith('.') ? result : result + '...';
+                // Ensure the text ends nicely
+                return result.endsWith('.') || result.endsWith('?') || result.endsWith('!') ? result : result + '...';
             };
             
             // --- UI & Event Handlers ---
@@ -323,7 +359,7 @@
                         generateBtn.disabled = false;
                         copyBtn.disabled = false;
                     }
-                }, 10); // Slightly faster typing
+                }, 10);
             };
 
             const updateFileListUI = (sources) => {
@@ -394,15 +430,36 @@
             const handleCopy = () => {
                 const textToCopy = outputEl.innerText;
                 if (!textToCopy || copyBtn.disabled) return;
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    // visual feedback for copy can be added here if desired
-                }).catch(err => console.error('Clipboard copy failed', err));
+
+                // Use a temporary textarea for robust copying
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                textArea.style.position = 'fixed';
+                textArea.style.top = '-9999px';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                try {
+                    document.execCommand('copy');
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'COPIED!';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 1500);
+                } catch (err) {
+                    console.error('Clipboard copy failed', err);
+                }
+
+                document.body.removeChild(textArea);
             };
             
             const updateButtonStates = () => {
                 const hasSources = loadedSources.length > 0;
                 generateBtn.disabled = !hasSources;
                 previewBtn.disabled = !hasSources;
+                clearBtn.disabled = !hasSources; 
             };
 
             const closeModal = () => {
@@ -469,10 +526,26 @@
 
             // --- Drag and Drop Logic ---
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+                dropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
             });
-            ['dragenter', 'dragover'].forEach(eventName => dropZone.classList.add('bg-gray-300'));
-            ['dragleave', 'drop'].forEach(eventName => dropZone.classList.remove('bg-gray-300'));
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('bg-gray-300', 'border-black');
+                    dropZone.classList.remove('border-gray-500');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('bg-gray-300', 'border-black');
+                    dropZone.classList.add('border-gray-500');
+                }, false);
+            });
+            
             dropZone.addEventListener('drop', (e) => {
                 if (e.dataTransfer.files.length > 0) {
                     fileInput.files = e.dataTransfer.files;
